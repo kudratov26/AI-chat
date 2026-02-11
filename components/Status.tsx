@@ -1,14 +1,42 @@
 import React from 'react'
 
-export const Status = ({
-    status
-}: {
-    status: string;
-}) => {
+type StatusType = 'listening' | 'processing' | 'error' | 'idle'
+
+interface StatusProps {
+    status: string
+    type?: StatusType
+}
+
+const statusConfig = {
+    listening: {
+        bgClass: 'bg-green-500/20 border-green-500',
+        dotClass: 'bg-green-500',
+        textClass: 'text-green-700'
+    },
+    processing: {
+        bgClass: 'bg-blue-500/20 border-blue-500',
+        dotClass: 'bg-blue-500',
+        textClass: 'text-blue-700'
+    },
+    error: {
+        bgClass: 'bg-red-500/20 border-red-500',
+        dotClass: 'bg-red-500',
+        textClass: 'text-red-700'
+    },
+    idle: {
+        bgClass: 'bg-gray-500/20 border-gray-500',
+        dotClass: 'bg-gray-500',
+        textClass: 'text-gray-700'
+    }
+}
+
+export const Status = ({ status, type = 'idle' }: StatusProps) => {
+    const config = statusConfig[type]
+
     return (
-        <div className={`flex items-center gap-2 bg-yellow-500/50 px-2 py-1 rounded-full`}>
-            <span className={`rounded-full w-2 h-2 bg-yellow-500`}></span>
-            <span className={`text-xs font-semibold text-yellow-500`}>{status}</span>
+        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${config.bgClass}`}>
+            <span className={`rounded-full w-2 h-2 ${config.dotClass} ${type === 'listening' ? 'animate-pulse' : ''}`}></span>
+            <span className={`text-xs font-semibold ${config.textClass}`}>{status}</span>
         </div>
     )
 }

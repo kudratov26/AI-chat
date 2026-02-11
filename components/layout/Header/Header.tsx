@@ -1,16 +1,21 @@
-import { Video } from 'lucide-react'
-import { Status } from '@/components/Status'
+import { Video, Mic } from 'lucide-react'
 
 export const Header = () => {
   return (
-    <nav className='flex justify-between items-center p-2'>
-      <div className='flex items-center gap-2'>
-        <div className='p-1 bg-green-300 rounded-sm'>
-          <Video />
+    <nav className='flex justify-between items-center p-4 border-b border-gray-200 bg-white'>
+      <div className='flex items-center gap-3'>
+        <div className='p-2 bg-blue-100 rounded-lg'>
+          <Video className="w-5 h-5 text-blue-600" />
         </div>
-        <h1 className='text-xl font-bold text-black dark:text-white'>AI Chat</h1>
+        <div>
+          <h1 className='text-xl font-bold text-gray-900'>AI Character Chat</h1>
+          <p className='text-xs text-gray-500'>Video conversation with speech recognition</p>
+        </div>
       </div>
-      <Status status='Listening' />
+      <div className="flex items-center gap-2 text-sm text-gray-600">
+        <Mic className="w-4 h-4" />
+        <span>Speech Enabled</span>
+      </div>
     </nav>
   )
 }
