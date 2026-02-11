@@ -1,4 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+
+declare global {
+    interface Window {
+        SpeechRecognition: any;
+        webkitSpeechRecognition: any;
+    }
+}
 
 export type ConversationState =
     | "idle"
@@ -66,6 +73,7 @@ export function useConversation() {
     const [transcript, setTranscript] = useState<string>('')
     const [currentVideo, setCurrentVideo] = useState<VideoKey>('idle')
     const [currentSource, setCurrentSource] = useState<string>(VIDEO_SOURCES['idle'][0])
-
-    const [transcriptHistory, setTranscriptHistory] = useState<string[]>([])
+    const [transcriptHistory, setTranscriptHistory] = useState<
+        Array<{ text: string; type: "user" | "system" }>
+    >([]);
 }
