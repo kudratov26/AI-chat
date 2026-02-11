@@ -65,27 +65,26 @@ export const Chat = () => {
 
     return (
         <div className='max-w-4xl mx-auto space-y-6'>
-            {/* Video Player - Centered */}
-            <div className='flex justify-center'>
-                <VideoPlayer
-                    currentVideo={currentVideo}
-                    currentSource={currentSource}
-                    isMuted={isMuted}
-                    isLooping={LOOPING_VIDEOS.has(currentVideo)}
-                    onVideoEnded={onVideoEnded}
-                />
-            </div>
-
-            {/* Status Display */}
-            <div className="flex items-center justify-center space-x-4">
-                {isListening && (
-                    <Status status="Listening..." type="listening" />
-                )}
-                {state && (
-                    <div className="text-sm text-gray-600 capitalize">
-                        State: {state}
-                    </div>
-                )}
+            <div className='relative'>
+                <div className='flex justify-center'>
+                    <VideoPlayer
+                        currentVideo={currentVideo}
+                        currentSource={currentSource}
+                        isMuted={isMuted}
+                        isLooping={LOOPING_VIDEOS.has(currentVideo)}
+                        onVideoEnded={onVideoEnded}
+                    />
+                </div>
+                <div className='absolute top-2 left-4 z-10 flex justify-start space-x-2'>
+                    {isListening && (
+                        <Status status="Listening..." type="listening" />
+                    )}
+                    {state && (
+                        <div className="text-sm text-white font-bold capitalize">
+                            State: {state}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Error Display */}
@@ -125,15 +124,6 @@ export const Chat = () => {
                     </Button>
                 )}
             </div>
-
-            {/* Speech Support Warning */}
-            {!isSupported && (
-                <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg max-w-md mx-auto">
-                    <p className="text-sm">
-                        Speech recognition is not supported in your browser. Please use Chrome or Edge for best experience.
-                    </p>
-                </div>
-            )}
 
             {/* Current Transcript */}
             {transcript && (
