@@ -77,97 +77,14 @@ function matchKeyword(transcript: string[]) {
 
 export function useConversation() {
     const [state, setState] = useState<ConversationState>('idle')
-    const [transcript, setTranscript] = useState<string>('')
     const [currentVideo, setCurrentVideo] = useState<VideoKey>('idle')
     const [currentSource, setCurrentSource] = useState<string>(VIDEO_SOURCES['idle'][0])
     const [transcriptHistory, setTranscriptHistory] = useState<
         Array<{ text: string; type: "user" | "system" }>
     >([]);
-    const [isListening, setIsListening] = useState(false)
-    const [speechSupported, setSpeechSupported] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
-    const recognitionRef = useRef<any>(null)
     const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-
-    // Initialize speech recognition
-    useEffect(() => {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-        if (!SpeechRecognition) {
-            setSpeechSupported(false)
-            setError('Speech recognition is not supported in this browser')
-            return
-        }
-
-        const recognition = new SpeechRecognition()
-        recognition.continuous = false
-        recognition.interimResults = true
-        recognition.lang = 'en-US'
-
-        recognition.onstart = () => {
-            setIsListening(true)
-            setError(null)
-            clearSilenceTimeout()
-        }
-
-        recognition.onresult = (event: any) => {
-            const current = event.resultIndex
-            const transcript = event.results[current][0].transcript
-            const isFinal = event.results[current].isFinal
-
-            setTranscript(transcript)
-
-            if (isFinal) {
-                handleSpeechResult(transcript)
-            }
-        }
-
-        recognition.onerror = (event: any) => {
-            console.error('Speech recognition error:', event.error)
-            setError(`Speech recognition error: ${event.error}`)
-            setIsListening(false)
-
-            // Play fallback video on error
-            if (state === 'listening') {
-                playVideo('fallback')
-            }
-        }
-
-        recognition.onend = () => {
-            setIsListening(false)
-            clearSilenceTimeout()
-        }
-
-        recognitionRef.current = recognition
-
-        return () => {
-            if (recognitionRef.current) {
-                recognitionRef.current.stop()
-            }
-            clearSilenceTimeout()
-        }
-    }, [state])
-
-    const clearSilenceTimeout = () => {
-        if (silenceTimeoutRef.current) {
-            clearTimeout(silenceTimeoutRef.current)
-            silenceTimeoutRef.current = null
-        }
-    }
-
-    const startSilenceDetection = () => {
-        clearSilenceTimeout()
-        silenceTimeoutRef.current = setTimeout(() => {
-            if (state === 'listening') {
-                playVideo('prompt')
-                // After prompt, resume listening
-                setTimeout(() => {
-                    startListening()
-                }, 15000) // Changed from 10000 to 15000
-            }
-        }, 5000) // 5 seconds of silence as requested
-    }
 
     const handleSpeechResult = useCallback((transcript: string) => {
         const words = transcript.toLowerCase().split(' ')
@@ -180,25 +97,31 @@ export function useConversation() {
         playVideo(matchedVideo)
     }, [])
 
-    const startListening = useCallback(() => {
-        if (!recognitionRef.current || !speechSupported) {
-            return
+    const handleSpeechError = useCallback(() => {
+        setError('Speech recognition error occurred')
+        if (state === 'listening') {
+            playVideo('fallback')
         }
+    }, [state])
 
-        try {
-            recognitionRef.current.start()
-            startSilenceDetection()
-        } catch (error) {
-            console.error('Failed to start speech recognition:', error)
-            setError('Failed to start speech recognition')
-        }
-    }, [speechSupported])
+    const startSilenceTimer = useCallback((duration: number) => {
+        clearSilenceTimer()
+        silenceTimeoutRef.current = setTimeout(() => {
+            if (state === 'listening') {
+                playVideo('prompt')
+                // After prompt, resume listening
+                setTimeout(() => {
+                    playVideo('listening')
+                }, 3000)
+            }
+        }, duration)
+    }, [state])
 
-    const stopListening = useCallback(() => {
-        if (recognitionRef.current) {
-            recognitionRef.current.stop()
+    const clearSilenceTimer = useCallback(() => {
+        if (silenceTimeoutRef.current) {
+            clearTimeout(silenceTimeoutRef.current)
+            silenceTimeoutRef.current = null
         }
-        clearSilenceTimeout()
     }, [])
 
     const playVideo = useCallback((videoKey: VideoKey) => {
@@ -212,19 +135,14 @@ export function useConversation() {
             setState('greeting')
         } else if (videoKey === 'listening') {
             setState('listening')
-            // Start listening when listening video begins
-            setTimeout(() => {
-                startListening()
-            }, 500)
         } else if (videoKey === 'goodbye') {
             setState('goodbye')
-            stopListening()
         } else if (videoKey === 'fallback' || videoKey === 'prompt') {
             setState(videoKey)
         } else {
             setState('responding')
         }
-    }, [startListening, stopListening])
+    }, [])
 
     const startChat = useCallback(() => {
         playVideo('greeting')
@@ -236,13 +154,12 @@ export function useConversation() {
 
     const resetChat = useCallback(() => {
         setState('idle')
-        setTranscript('')
         setCurrentVideo('idle')
         setCurrentSource(VIDEO_SOURCES['idle'][0])
         setTranscriptHistory([])
         setError(null)
-        stopListening()
-    }, [stopListening])
+        clearSilenceTimer()
+    }, [clearSilenceTimer])
 
     // Handle video end events
     const handleVideoEnd = useCallback(() => {
@@ -262,21 +179,27 @@ export function useConversation() {
         // Idle and listening videos loop automatically
     }, [state, playVideo, resetChat])
 
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            clearSilenceTimer()
+        }
+    }, [clearSilenceTimer])
+
     return {
         state,
-        transcript,
         currentVideo,
         currentSource,
         transcriptHistory,
-        isListening,
-        speechSupported,
         error,
         startChat,
         endChat,
         resetChat,
-        startListening,
-        stopListening,
-        handleVideoEnd,
+        onVideoEnded: handleVideoEnd,
+        handleSpeechResult,
+        handleSpeechError,
+        startSilenceTimer,
+        clearSilenceTimer,
         VIDEO_SOURCES,
         LOOPING_VIDEOS
     }
