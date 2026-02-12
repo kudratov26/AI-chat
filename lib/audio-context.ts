@@ -9,9 +9,14 @@ export const getAudioTools = () => {
     if (!audioContext) {
         audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
         sharedAnalyser = audioContext.createAnalyser();
-        sharedAnalyser.fftSize = 256;
-        // Connect to destination by default so everything connected to the analyser is audible
-        sharedAnalyser.connect(audioContext.destination);
+        sharedAnalyser.fftSize = 512; // Increased for better resolution
+
+        // Trick to keep the analyser active without audible loopback:
+        // Connect to a GainNode with 0 volume, then to destination.
+        const silentGain = audioContext.createGain();
+        silentGain.gain.value = 0;
+        sharedAnalyser.connect(silentGain);
+        silentGain.connect(audioContext.destination);
     }
 
     return { ctx: audioContext, analyser: sharedAnalyser };

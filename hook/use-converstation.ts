@@ -118,7 +118,7 @@ export function useConversation() {
                 playVideo('prompt')
                 setTimeout(() => {
                     playVideo('listening')
-                }, 3000)
+                }, 10000)
             }
         }, duration)
     }, [state])

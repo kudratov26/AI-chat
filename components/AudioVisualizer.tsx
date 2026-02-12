@@ -1,141 +1,86 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
-import { getAudioTools } from "@/lib/audio-context";
+import React, { useEffect, useRef } from 'react';
 
 interface AudioVisualizerProps {
-  isActive: boolean;
-  isListening: boolean;
-  color?: string;
-  barWidth?: number;
-  gap?: number;
+  stream: MediaStream | null;
+  isVisible: boolean;
 }
 
-export const AudioVisualizer = ({
-  isActive,
-  isListening,
-  color = "#94a3b8",
-  barWidth = 2,
-  gap = 1,
-}: AudioVisualizerProps) => {
-  // Refs
+export const AudioVisualizer = ({ stream, isVisible }: AudioVisualizerProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationFrameRef = useRef<number | null>(null);
-  const micStreamRef = useRef<MediaStream | null>(null);
-  const micSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationRef = useRef<number | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
 
-  // Audio connection setup
   useEffect(() => {
-    const { ctx, analyser } = getAudioTools();
-    if (!ctx || !analyser) return;
-
-    if (isListening) {
-      startMic(ctx, analyser);
-    } else {
-      stopMic();
+    if (!stream || !isVisible || !canvasRef.current) {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      return;
     }
 
-    if (isActive || isListening) {
-      draw(analyser);
-    } else {
-      stopDrawing();
-    }
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    audioContextRef.current = audioContext;
 
-    return () => {
-      stopMic();
-      stopDrawing();
-    };
-  }, [isActive, isListening]);
+    const analyser = audioContext.createAnalyser();
+    analyser.fftSize = 32; // Reduced for fewer, thicker bars
+    analyserRef.current = analyser;
 
-  // Microphone handler
-  const startMic = async (ctx: AudioContext, analyser: AnalyserNode) => {
-    try {
-      if (ctx.state === "suspended") await ctx.resume();
+    const source = audioContext.createMediaStreamSource(stream);
+    source.connect(analyser);
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      micStreamRef.current = stream;
-
-      const source = ctx.createMediaStreamSource(stream);
-      source.connect(analyser);
-      micSourceRef.current = source;
-    } catch (err) {
-      console.error("Error accessing microphone for visualizer:", err);
-    }
-  };
-
-  const stopMic = () => {
-    if (micSourceRef.current) {
-      micSourceRef.current.disconnect();
-      micSourceRef.current = null;
-    }
-    if (micStreamRef.current) {
-      micStreamRef.current.getTracks().forEach((track) => track.stop());
-      micStreamRef.current = null;
-    }
-  };
-
-  const stopDrawing = () => {
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
     const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext("2d");
-      ctx?.clearRect(0, 0, canvas.width, canvas.height);
-    }
-  };
-
-  // Canvas (audio/volume bars) handler
-  const draw = (analyser: AnalyserNode) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
 
-    const renderFrame = () => {
-      animationFrameRef.current = requestAnimationFrame(renderFrame);
+    const draw = () => {
+      animationRef.current = requestAnimationFrame(draw);
       analyser.getByteFrequencyData(dataArray);
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const width = canvas.width;
-      const height = canvas.height;
-      const barCount = 12;
+      const barWidth = canvas.width / bufferLength;
+      let barHeight;
+      let x = 0;
 
-      for (let i = 0; i < barCount; i++) {
-        const dataIndex = Math.floor((i / barCount) * (bufferLength / 2));
-        const value = dataArray[dataIndex];
-        const percent = value / 255;
-        const bHeight = Math.max(2, height * percent * 1.5);
+      for (let i = 0; i < bufferLength; i++) {
+        barHeight = Math.max(3, (dataArray[i] / 255) * canvas.height);
+        const y = (canvas.height - barHeight) / 2;
 
-        const x = (width / 2) - (barCount * (barWidth + gap) / 2) + i * (barWidth + gap);
-        const y = (height - bHeight) / 2;
-
-        ctx.fillStyle = color;
+        // Minimalistic white rounded bars
+        ctx.fillStyle = `rgb(255, 255, 255)`;
+        ctx.beginPath();
         if (ctx.roundRect) {
-          ctx.roundRect(x, y, barWidth, bHeight, barWidth / 2);
+          ctx.roundRect(x, y, barWidth - 2, barHeight, 1.5);
         } else {
-          ctx.rect(x, y, barWidth, bHeight);
+          ctx.rect(x, y, barWidth - 2, barHeight);
         }
         ctx.fill();
+
+        x += barWidth;
       }
     };
 
-    renderFrame();
-  };
+    draw();
+
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      if (audioContextRef.current) audioContextRef.current.close();
+    };
+  }, [stream, isVisible]);
+
+  if (!isVisible) return null;
 
   return (
-    <div className={`transition-all duration-500 ease-in-out flex justify-center items-center h-6 ${(isActive || isListening) ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
+    <div className="flex justify-center items-center h-8">
       <canvas
         ref={canvasRef}
-        width={100}
+        width={80}
         height={24}
-        className="w-24 h-6 opacity-60"
+        className=""
       />
     </div>
   );

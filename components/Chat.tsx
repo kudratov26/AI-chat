@@ -7,6 +7,7 @@ import { Button } from './Button'
 import { Status } from './Status'
 import { Transcript } from './Transcript'
 import { AudioVisualizer } from './AudioVisualizer'
+import { useMediaRecorder } from '@/hook/use-media-recorder';
 import { useSpeechRecognition } from '@/hook/use-speech-recognition';
 import { LOOPING_VIDEOS } from '@/constants/videos';
 import { resumeContext } from '@/lib/audio-context';
@@ -16,6 +17,7 @@ export const Chat = () => {
     const [isMuted, setIsMuted] = useState(true)
 
     // Hooks
+    const { mediaRecorder, stream } = useMediaRecorder();
     const {
         state,
         currentVideo,
@@ -73,7 +75,9 @@ export const Chat = () => {
         }
     }, [state])
 
-    const isAIActive = state !== 'idle' && state !== 'listening' && state !== 'prompt';
+    // AI is active if it's not idle and not explicitly 'just' listening
+    // We want visualizer for greeting, responding, fallback, prompt
+    const isAIActive = ['greeting', 'responding', 'fallback', 'prompt', 'goodbye'].includes(state || '');
 
     return (
         <div className='max-w-4xl mx-auto space-y-4'>
@@ -96,8 +100,8 @@ export const Chat = () => {
                 </div>
                 <div className="absolute bottom-6 left-0 right-0 z-20 pointer-events-none">
                     <AudioVisualizer
-                        isActive={isAIActive}
-                        isListening={isListening}
+                        stream={stream}
+                        isVisible={isAIActive || isListening}
                     />
                 </div>
             </div>

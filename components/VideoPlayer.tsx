@@ -39,7 +39,9 @@ export function VideoPlayer({
             if (!sourcesRef.current.has(video)) {
                 try {
                     const source = ctx.createMediaElementSource(video);
+                    // Connect to both analyser (for visualizer) AND destination (for speakers)
                     source.connect(analyser);
+                    source.connect(ctx.destination);
                     sourcesRef.current.set(video, source);
                 } catch (e) {
                     console.error("Failed to connect video to audio context:", e);
