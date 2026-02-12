@@ -12,6 +12,10 @@ import { LOOPING_VIDEOS } from '@/constants/videos';
 import { resumeContext } from '@/lib/audio-context';
 
 export const Chat = () => {
+    // States
+    const [isMuted, setIsMuted] = useState(true)
+
+    // Hooks
     const {
         state,
         currentVideo,
@@ -27,9 +31,6 @@ export const Chat = () => {
         startSilenceTimer,
         clearSilenceTimer,
     } = useConversation();
-
-    const [isMuted, setIsMuted] = useState(true)
-
     const {
         isListening,
         isSupported,
@@ -41,12 +42,14 @@ export const Chat = () => {
         onError: handleSpeechError,
     });
 
-    const handleStartChat = async () => {
-        await resumeContext();
-        setIsMuted(false)
-        startChat()
+    // Handlers
+    const handleStartChat = () => {
+        resumeContext();
+        setIsMuted(false);
+        startChat();
     }
 
+    // Silence detector
     useEffect(() => {
         if (state === 'listening') {
             startListening()
@@ -57,13 +60,19 @@ export const Chat = () => {
         }
     }, [state, startListening, stopListening, startSilenceTimer, clearSilenceTimer])
 
+    // listening
     useEffect(() => {
         if (interimTranscript && state === 'listening') {
             startSilenceTimer(7000)
         }
     }, [interimTranscript, state, startSilenceTimer])
 
-    // Active means AI is speaking/acting
+    useEffect(() => {
+        if (state === 'idle') {
+            setIsMuted(true)
+        }
+    }, [state])
+
     const isAIActive = state !== 'idle' && state !== 'listening' && state !== 'prompt';
 
     return (
@@ -85,8 +94,6 @@ export const Chat = () => {
                         </div>
                     )}
                 </div>
-
-                {/* Minimalistic Audio Visualizer Overlay */}
                 <div className="absolute bottom-6 left-0 right-0 z-20 pointer-events-none">
                     <AudioVisualizer
                         isActive={isAIActive}
@@ -94,15 +101,11 @@ export const Chat = () => {
                     />
                 </div>
             </div>
-
-            {/* Error Display */}
             {error && (
                 <div className="text-red-500/80 text-[11px] font-mono text-center animate-in fade-in slide-in-from-top-1">
                     [ERROR: {error.toUpperCase()}]
                 </div>
             )}
-
-            {/* Clean Transcript Area */}
             <div className="px-4 py-2">
                 <Transcript
                     transcriptHistory={transcriptHistory}
@@ -111,30 +114,29 @@ export const Chat = () => {
                 />
             </div>
 
-            {/* Control Buttons - Minimalist */}
+            {/* Control Buttons */}
             <div className="flex justify-center space-x-8 pt-2">
                 {state === 'idle' ? (
                     <button
+                        className="text-gray-400 hover:text-gray-600 text-xs font-mono uppercase tracking-widest transition-colors duration-300 disabled:opacity-30"
                         onClick={handleStartChat}
                         disabled={!isSupported}
-                        className="text-gray-400 hover:text-gray-600 text-xs font-mono uppercase tracking-widest transition-colors duration-300 disabled:opacity-30"
                     >
                         [ Start ]
                     </button>
                 ) : (
                     <>
                         <button
+                            className="text-gray-400 hover:text-red-400 text-xs font-mono uppercase tracking-widest transition-colors duration-300"
                             onClick={() => {
-                                setIsMuted(true)
                                 endChat()
                             }}
-                            className="text-gray-400 hover:text-red-400 text-xs font-mono uppercase tracking-widest transition-colors duration-300"
                         >
                             [ End ]
                         </button>
                         <button
-                            onClick={resetChat}
                             className="text-gray-300 hover:text-gray-500 text-xs font-mono uppercase tracking-widest transition-colors duration-300"
+                            onClick={resetChat}
                         >
                             [ Reset ]
                         </button>

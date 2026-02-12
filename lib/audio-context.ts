@@ -10,7 +10,8 @@ export const getAudioTools = () => {
         audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
         sharedAnalyser = audioContext.createAnalyser();
         sharedAnalyser.fftSize = 256;
-        // Don't connect to destination yet; components will handle their input/output routing
+        // Connect to destination by default so everything connected to the analyser is audible
+        sharedAnalyser.connect(audioContext.destination);
     }
 
     return { ctx: audioContext, analyser: sharedAnalyser };

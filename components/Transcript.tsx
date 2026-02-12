@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 
 interface TranscriptProps {
     transcriptHistory: Array<{ text: string; type: "user" | "system" }>
@@ -23,7 +23,6 @@ export const Transcript = ({ transcriptHistory, isListening, interimTranscript }
 
     return (
         <div className="flex flex-col">
-            {/* Transcript Messages with fixed height and dialogue style */}
             <div className="relative">
                 <div
                     ref={scrollRef}
@@ -35,7 +34,7 @@ export const Transcript = ({ transcriptHistory, isListening, interimTranscript }
                 >
                     {transcriptHistory.length === 0 && !interimTranscript ? (
                         <div className="text-gray-300 text-xs italic py-10">
-                            Silence is golden...
+                            Empty...
                         </div>
                     ) : (
                         <>
@@ -53,7 +52,6 @@ export const Transcript = ({ transcriptHistory, isListening, interimTranscript }
                                 </div>
                             ))}
 
-                            {/* Interim Transcript */}
                             {interimTranscript && (
                                 <div className="text-sm leading-relaxed opacity-60">
                                     <span className="font-mono text-[11px] uppercase tracking-tighter text-gray-400 mr-2 min-w-[30px] inline-block">

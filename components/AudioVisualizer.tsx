@@ -14,15 +14,17 @@ interface AudioVisualizerProps {
 export const AudioVisualizer = ({
   isActive,
   isListening,
-  color = "#94a3b8", // slate-400 for minimalism
+  color = "#94a3b8",
   barWidth = 2,
   gap = 1,
 }: AudioVisualizerProps) => {
+  // Refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationFrameRef = useRef<number | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
   const micSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
 
+  // Audio connection setup
   useEffect(() => {
     const { ctx, analyser } = getAudioTools();
     if (!ctx || !analyser) return;
@@ -45,6 +47,7 @@ export const AudioVisualizer = ({
     };
   }, [isActive, isListening]);
 
+  // Microphone handler
   const startMic = async (ctx: AudioContext, analyser: AnalyserNode) => {
     try {
       if (ctx.state === "suspended") await ctx.resume();
@@ -83,6 +86,7 @@ export const AudioVisualizer = ({
     }
   };
 
+  // Canvas (audio/volume bars) handler
   const draw = (analyser: AnalyserNode) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -107,7 +111,6 @@ export const AudioVisualizer = ({
         const dataIndex = Math.floor((i / barCount) * (bufferLength / 2));
         const value = dataArray[dataIndex];
         const percent = value / 255;
-        // Increased sensitivity for better animation
         const bHeight = Math.max(2, height * percent * 1.5);
 
         const x = (width / 2) - (barCount * (barWidth + gap) / 2) + i * (barWidth + gap);
