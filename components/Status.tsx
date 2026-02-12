@@ -9,24 +9,24 @@ interface StatusProps {
 
 const statusConfig = {
     listening: {
-        bgClass: 'bg-green-500/20 border-green-500',
+        bgClass: 'bg-green-500/10 dark:bg-green-500/20 border-green-500/50 dark:border-green-500',
         dotClass: 'bg-green-500',
-        textClass: 'text-green-700'
+        textClass: 'text-green-700 dark:text-green-400'
     },
     processing: {
-        bgClass: 'bg-blue-500/20 border-blue-500',
+        bgClass: 'bg-blue-500/10 dark:bg-blue-500/20 border-blue-500/50 dark:border-blue-500',
         dotClass: 'bg-blue-500',
-        textClass: 'text-blue-700'
+        textClass: 'text-blue-700 dark:text-blue-400'
     },
     error: {
-        bgClass: 'bg-red-500/20 border-red-500',
+        bgClass: 'bg-red-500/10 dark:bg-red-500/20 border-red-500/50 dark:border-red-500',
         dotClass: 'bg-red-500',
-        textClass: 'text-red-700'
+        textClass: 'text-red-700 dark:text-red-400'
     },
     idle: {
-        bgClass: 'bg-gray-500/20 border-gray-500',
-        dotClass: 'bg-gray-500',
-        textClass: 'text-gray-700'
+        bgClass: 'bg-slate-500/10 dark:bg-slate-500/20 border-slate-500/50 dark:border-slate-500',
+        dotClass: 'bg-slate-500',
+        textClass: 'text-slate-700 dark:text-slate-400'
     }
 }
 

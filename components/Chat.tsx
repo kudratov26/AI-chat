@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { VideoPlayer } from './VideoPlayer'
+import { ThemeToggle } from './ThemeToggle'
 import { useConversation } from '@/hook/use-converstation'
 import { Button } from './Button'
 import { Status } from './Status'
@@ -122,7 +123,7 @@ export const Chat = () => {
             <div className="flex justify-center space-x-8 pt-2">
                 {state === 'idle' ? (
                     <button
-                        className="text-gray-400 hover:text-gray-600 text-xs font-mono uppercase tracking-widest transition-colors duration-300 disabled:opacity-30"
+                        className="text-muted-foreground hover:text-foreground text-xs font-mono uppercase tracking-widest transition-colors duration-300 disabled:opacity-30"
                         onClick={handleStartChat}
                         disabled={!isSupported}
                     >
@@ -131,7 +132,7 @@ export const Chat = () => {
                 ) : (
                     <>
                         <button
-                            className="text-gray-400 hover:text-red-400 text-xs font-mono uppercase tracking-widest transition-colors duration-300"
+                            className="text-muted-foreground hover:text-red-400 text-xs font-mono uppercase tracking-widest transition-colors duration-300"
                             onClick={() => {
                                 endChat()
                             }}
@@ -139,7 +140,7 @@ export const Chat = () => {
                             [ End ]
                         </button>
                         <button
-                            className="text-gray-300 hover:text-gray-500 text-xs font-mono uppercase tracking-widest transition-colors duration-300"
+                            className="text-muted-foreground hover:text-foreground text-xs font-mono uppercase tracking-widest transition-colors duration-300"
                             onClick={resetChat}
                         >
                             [ Reset ]

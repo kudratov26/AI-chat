@@ -43,10 +43,10 @@ export const Transcript = ({ transcriptHistory, isListening, interimTranscript }
                                     key={index}
                                     className="text-sm leading-relaxed"
                                 >
-                                    <span className="font-mono text-[11px] uppercase tracking-tighter text-gray-400 mr-2 min-w-[30px] inline-block">
+                                    <span className="font-mono text-[11px] uppercase tracking-tighter text-muted-foreground mr-2 min-w-[30px] inline-block">
                                         {entry.type === 'user' ? 'Me:' : 'AI:'}
                                     </span>
-                                    <span className="text-gray-600">
+                                    <span className="text-foreground/80">
                                         {entry.text}
                                     </span>
                                 </div>
@@ -54,10 +54,10 @@ export const Transcript = ({ transcriptHistory, isListening, interimTranscript }
 
                             {interimTranscript && (
                                 <div className="text-sm leading-relaxed opacity-60">
-                                    <span className="font-mono text-[11px] uppercase tracking-tighter text-gray-400 mr-2 min-w-[30px] inline-block">
+                                    <span className="font-mono text-[11px] uppercase tracking-tighter text-muted-foreground mr-2 min-w-[30px] inline-block">
                                         Me:
                                     </span>
-                                    <span className="text-gray-500 italic">
+                                    <span className="text-foreground/60 italic">
                                         {interimTranscript}...
                                     </span>
                                 </div>
