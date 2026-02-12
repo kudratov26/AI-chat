@@ -56,6 +56,15 @@ const KEYWORD_MAPPINGS: KeywordMap[] = [
     // { keywords: ["secret", "magic", "code", "hidden"], video: "easter_egg" },
 ];
 
+const AI_RESPONSES: Partial<Record<VideoKey, string>> = {
+    greeting: "Hello! I'm ready to chat with you.",
+    weather: "The weather today seems quite pleasant, doesn't it?",
+    general_response: "That's interesting! Tell me more.",
+    goodbye: "It was nice talking to you. Goodbye!",
+    fallback: "I'm sorry, I didn't quite catch that. Could you repeat?",
+    prompt: "Are you still there? I'm listening.",
+};
+
 function matchKeyword(transcript: string[]) {
     const keywords = transcript.map((word) => word.toLowerCase().trim());
 
@@ -127,6 +136,12 @@ export function useConversation() {
     const playVideo = useCallback((videoKey: VideoKey) => {
         setCurrentVideo(videoKey)
         setCurrentSource(VIDEO_SOURCES[videoKey][0])
+
+        // Add character response to history if it exists
+        const responseText = AI_RESPONSES[videoKey];
+        if (responseText) {
+            setTranscriptHistory(prev => [...prev, { text: responseText, type: "system" }]);
+        }
 
         // Update conversation state based on video
         if (videoKey === 'idle') {

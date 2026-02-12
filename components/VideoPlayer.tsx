@@ -1,6 +1,5 @@
-"use client";
-
 import { useEffect, useRef, useState } from "react";
+import { getAudioTools } from "@/lib/audio-context";
 
 interface VideoPlayerProps {
     currentVideo: string;
@@ -23,6 +22,32 @@ export function VideoPlayer({
     const [bufferSource, setBufferSource] = useState<string | null>(null);
     const [isActiveVisible, setIsActiveVisible] = useState(true);
     const prevSourceRef = useRef<string>(currentSource);
+
+    // Audio connection refs
+    const audioContextRef = useRef<AudioContext | null>(null);
+    const sourcesRef = useRef<Map<HTMLVideoElement, MediaElementAudioSourceNode>>(new Map());
+
+    useEffect(() => {
+        const { ctx, analyser } = getAudioTools();
+        if (!ctx || !analyser) return;
+        audioContextRef.current = ctx;
+
+        const connectVideo = (video: HTMLVideoElement) => {
+            if (!sourcesRef.current.has(video)) {
+                try {
+                    const source = ctx.createMediaElementSource(video);
+                    source.connect(analyser);
+                    analyser.connect(ctx.destination);
+                    sourcesRef.current.set(video, source);
+                } catch (e) {
+                    console.error("Failed to connect video to audio context:", e);
+                }
+            }
+        };
+
+        if (activeRef.current) connectVideo(activeRef.current);
+        if (bufferRef.current) connectVideo(bufferRef.current);
+    }, []);
 
     useEffect(() => {
         if (currentSource === prevSourceRef.current) return;
@@ -80,6 +105,7 @@ export function VideoPlayer({
                 muted={isMuted}
                 autoPlay
                 playsInline
+                crossOrigin="anonymous"
                 preload="auto"
                 onEnded={() => {
                     if (isActiveVisible) handleEnded(currentVideo);
@@ -95,6 +121,7 @@ export function VideoPlayer({
                 loop={isLooping && !isActiveVisible}
                 muted={isMuted}
                 playsInline
+                crossOrigin="anonymous"
                 preload="auto"
                 onEnded={() => {
                     if (!isActiveVisible) handleEnded(currentVideo);

@@ -6,8 +6,10 @@ import { useConversation } from '@/hook/use-converstation'
 import { Button } from './Button'
 import { Status } from './Status'
 import { Transcript } from './Transcript'
+import { AudioVisualizer } from './AudioVisualizer'
 import { useSpeechRecognition } from '@/hook/use-speech-recognition';
 import { LOOPING_VIDEOS } from '@/constants/videos';
+import { resumeContext } from '@/lib/audio-context';
 
 export const Chat = () => {
     const {
@@ -39,9 +41,8 @@ export const Chat = () => {
         onError: handleSpeechError,
     });
 
-    const [transcript, setTranscript] = useState('')
-
-    const handleStartChat = () => {
+    const handleStartChat = async () => {
+        await resumeContext();
         setIsMuted(false)
         startChat()
     }
@@ -58,13 +59,15 @@ export const Chat = () => {
 
     useEffect(() => {
         if (interimTranscript && state === 'listening') {
-            setTranscript(interimTranscript)
             startSilenceTimer(7000)
         }
     }, [interimTranscript, state, startSilenceTimer])
 
+    // Active means AI is speaking/acting
+    const isAIActive = state !== 'idle' && state !== 'listening' && state !== 'prompt';
+
     return (
-        <div className='max-w-4xl mx-auto space-y-6'>
+        <div className='max-w-4xl mx-auto space-y-4'>
             <div className='relative'>
                 <div className='flex justify-center'>
                     <VideoPlayer
@@ -75,71 +78,68 @@ export const Chat = () => {
                         onVideoEnded={onVideoEnded}
                     />
                 </div>
-                <div className='absolute top-2 left-4 z-10 flex justify-start space-x-2'>
-                    {isListening && (
-                        <Status status="Listening..." type="listening" />
-                    )}
-                    {state && (
-                        <div className="text-sm text-white font-bold capitalize">
-                            State: {state}
+                <div className='absolute top-4 left-4 z-10'>
+                    {state && state !== 'idle' && (
+                        <div className="text-[10px] text-white/40 font-mono uppercase tracking-[0.2em] bg-black/10 backdrop-blur-[2px] px-2 py-0.5 rounded-sm">
+                            {state}
                         </div>
                     )}
+                </div>
+
+                {/* Minimalistic Audio Visualizer Overlay */}
+                <div className="absolute bottom-6 left-0 right-0 z-20 pointer-events-none">
+                    <AudioVisualizer
+                        isActive={isAIActive}
+                        isListening={isListening}
+                    />
                 </div>
             </div>
 
             {/* Error Display */}
             {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg max-w-md mx-auto">
-                    <p className="text-sm">{error}</p>
+                <div className="text-red-500/80 text-[11px] font-mono text-center animate-in fade-in slide-in-from-top-1">
+                    [ERROR: {error.toUpperCase()}]
                 </div>
             )}
 
-            {/* Control Buttons */}
-            <div className="flex justify-center space-x-4">
-                {state === 'idle' && (
-                    <Button
-                        onClick={() => {
-                            setIsMuted(false)
-                            startChat()
-                        }}
-                        disabled={!isSupported}
-                    >
-                        Start Chat
-                    </Button>
-                )}
-
-                {(state === 'listening' || state === 'responding') && (
-                    <Button onClick={() => {
-                        setIsMuted(true)
-                        endChat()
-                    }} variant="outline"
-                    >
-                        End Chat
-                    </Button>
-                )}
-
-                {state !== 'idle' && (
-                    <Button onClick={resetChat} variant="secondary">
-                        Reset
-                    </Button>
-                )}
-            </div>
-
-            {/* Current Transcript */}
-            {transcript && (
-                <div className="bg-gray-50 border border-gray-200 px-4 py-2 rounded-lg max-w-md mx-auto">
-                    <p className="text-sm text-gray-600">
-                        <span className="font-semibold">You said:</span> {transcript}
-                    </p>
-                </div>
-            )}
-
-            {/* Full Transcript Below Video */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            {/* Clean Transcript Area */}
+            <div className="px-4 py-2">
                 <Transcript
                     transcriptHistory={transcriptHistory}
                     isListening={isListening}
+                    interimTranscript={interimTranscript}
                 />
+            </div>
+
+            {/* Control Buttons - Minimalist */}
+            <div className="flex justify-center space-x-8 pt-2">
+                {state === 'idle' ? (
+                    <button
+                        onClick={handleStartChat}
+                        disabled={!isSupported}
+                        className="text-gray-400 hover:text-gray-600 text-xs font-mono uppercase tracking-widest transition-colors duration-300 disabled:opacity-30"
+                    >
+                        [ Start ]
+                    </button>
+                ) : (
+                    <>
+                        <button
+                            onClick={() => {
+                                setIsMuted(true)
+                                endChat()
+                            }}
+                            className="text-gray-400 hover:text-red-400 text-xs font-mono uppercase tracking-widest transition-colors duration-300"
+                        >
+                            [ End ]
+                        </button>
+                        <button
+                            onClick={resetChat}
+                            className="text-gray-300 hover:text-gray-500 text-xs font-mono uppercase tracking-widest transition-colors duration-300"
+                        >
+                            [ Reset ]
+                        </button>
+                    </>
+                )}
             </div>
         </div>
     )
