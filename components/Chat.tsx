@@ -72,7 +72,7 @@ export const Chat = () => {
 
     useEffect(() => {
         if (state === 'idle') {
-            setIsMuted(true)
+            setTimeout(() => setIsMuted(true), 0)
         }
     }, [state])
 
@@ -114,7 +114,6 @@ export const Chat = () => {
             <div className="px-4 py-2">
                 <Transcript
                     transcriptHistory={transcriptHistory}
-                    isListening={isListening}
                     interimTranscript={interimTranscript}
                 />
             </div>

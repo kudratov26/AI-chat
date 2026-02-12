@@ -27,8 +27,8 @@ interface SpeechRecognitionInstance extends EventTarget {
 
 declare global {
     interface Window {
-        SpeechRecognition: new () => SpeechRecognitionInstance;
-        webkitSpeechRecognition: new () => SpeechRecognitionInstance;
+        SpeechRecognition: any;
+        webkitSpeechRecognition: any;
     }
 }
 
@@ -62,7 +62,7 @@ export function useSpeechRecognition({
         const supported =
             typeof window !== "undefined" &&
             ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
-        setIsSupported(supported);
+        setTimeout(() => setIsSupported(supported), 0);
     }, []);
 
     const stopListening = useCallback(() => {

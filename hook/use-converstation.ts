@@ -1,11 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
-declare global {
-    interface Window {
-        SpeechRecognition: any;
-        webkitSpeechRecognition: any;
-    }
-}
+// Global window types for SpeechRecognition are defined in use-speech-recognition.ts
 
 export type ConversationState =
     | "idle"
@@ -65,7 +60,7 @@ const AI_RESPONSES: Partial<Record<VideoKey, string>> = {
     prompt: "Are you still there? I'm listening.",
 };
 
-function matchKeyword(transcript: string[]) {
+function matchKeyword(transcript: string[]): VideoKey {
     const keywords = transcript.map((word) => word.toLowerCase().trim());
 
     // Debug logging
@@ -94,34 +89,6 @@ export function useConversation() {
     const [error, setError] = useState<string | null>(null)
 
     const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-
-    const handleSpeechResult = useCallback((transcript: string) => {
-        const words = transcript.toLowerCase().split(' ')
-        const matchedVideo = matchKeyword(words)
-
-        // Add to transcript history
-        setTranscriptHistory(prev => [...prev, { text: transcript, type: "user" }])
-        playVideo(matchedVideo)
-    }, [])
-
-    const handleSpeechError = useCallback(() => {
-        setError('Speech recognition error occurred')
-        if (state === 'listening') {
-            playVideo('fallback')
-        }
-    }, [state])
-
-    const startSilenceTimer = useCallback((duration: number) => {
-        clearSilenceTimer()
-        silenceTimeoutRef.current = setTimeout(() => {
-            if (state === 'listening') {
-                playVideo('prompt')
-                setTimeout(() => {
-                    playVideo('listening')
-                }, 10000)
-            }
-        }, duration)
-    }, [state])
 
     const clearSilenceTimer = useCallback(() => {
         if (silenceTimeoutRef.current) {
@@ -154,6 +121,34 @@ export function useConversation() {
             setState('responding')
         }
     }, [])
+
+    const handleSpeechResult = useCallback((transcript: string) => {
+        const words = transcript.toLowerCase().split(' ')
+        const matchedVideo = matchKeyword(words)
+
+        // Add to transcript history
+        setTranscriptHistory(prev => [...prev, { text: transcript, type: "user" }])
+        playVideo(matchedVideo)
+    }, [playVideo])
+
+    const handleSpeechError = useCallback(() => {
+        setError('Speech recognition error occurred')
+        if (state === 'listening') {
+            playVideo('fallback')
+        }
+    }, [state, playVideo])
+
+    const startSilenceTimer = useCallback((duration: number) => {
+        clearSilenceTimer()
+        silenceTimeoutRef.current = setTimeout(() => {
+            if (state === 'listening') {
+                playVideo('prompt')
+                setTimeout(() => {
+                    playVideo('listening')
+                }, 10000)
+            }
+        }, duration)
+    }, [state, clearSilenceTimer, playVideo])
 
     const startChat = useCallback(() => {
         playVideo('greeting')

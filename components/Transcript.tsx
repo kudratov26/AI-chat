@@ -4,11 +4,10 @@ import { useEffect, useRef } from 'react'
 
 interface TranscriptProps {
     transcriptHistory: Array<{ text: string; type: "user" | "system" }>
-    isListening: boolean
     interimTranscript?: string
 }
 
-export const Transcript = ({ transcriptHistory, isListening, interimTranscript }: TranscriptProps) => {
+export const Transcript = ({ transcriptHistory, interimTranscript }: TranscriptProps) => {
     const scrollRef = useRef<HTMLDivElement>(null);
 
     // Auto-scroll to bottom
