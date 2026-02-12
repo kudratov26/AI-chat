@@ -59,7 +59,7 @@ const KEYWORD_MAPPINGS: KeywordMap[] = [
 const AI_RESPONSES: Partial<Record<VideoKey, string>> = {
     greeting: "Hello! I'm ready to chat with you.",
     weather: "The weather today seems quite pleasant, doesn't it?",
-    general_response: "That's interesting! Tell me more.",
+    general_response: "That's interesting! How can I help you today?",
     goodbye: "It was nice talking to you. Goodbye!",
     fallback: "I'm sorry, I didn't quite catch that. Could you repeat?",
     prompt: "Are you still there? I'm listening.",
@@ -101,8 +101,6 @@ export function useConversation() {
 
         // Add to transcript history
         setTranscriptHistory(prev => [...prev, { text: transcript, type: "user" }])
-
-        // Play the appropriate response video
         playVideo(matchedVideo)
     }, [])
 
@@ -118,7 +116,6 @@ export function useConversation() {
         silenceTimeoutRef.current = setTimeout(() => {
             if (state === 'listening') {
                 playVideo('prompt')
-                // After prompt, resume listening
                 setTimeout(() => {
                     playVideo('listening')
                 }, 3000)
@@ -137,7 +134,6 @@ export function useConversation() {
         setCurrentVideo(videoKey)
         setCurrentSource(VIDEO_SOURCES[videoKey][0])
 
-        // Add character response to history if it exists
         const responseText = AI_RESPONSES[videoKey];
         if (responseText) {
             setTranscriptHistory(prev => [...prev, { text: responseText, type: "system" }]);
@@ -179,19 +175,14 @@ export function useConversation() {
     // Handle video end events
     const handleVideoEnd = useCallback(() => {
         if (state === 'greeting') {
-            // After greeting, start listening
             playVideo('listening')
         } else if (state === 'responding') {
-            // After response, go back to listening
             playVideo('listening')
         } else if (state === 'goodbye') {
-            // After goodbye, return to idle
             resetChat()
         } else if (state === 'fallback' || state === 'prompt') {
-            // After fallback/prompt, go back to listening
             playVideo('listening')
         }
-        // Idle and listening videos loop automatically
     }, [state, playVideo, resetChat])
 
     // Cleanup on unmount

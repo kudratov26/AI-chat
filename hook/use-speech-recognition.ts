@@ -131,7 +131,6 @@ export function useSpeechRecognition({
 
         recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
             if (event.error === "no-speech" || event.error === "aborted") {
-                // These are not real errors, don't trigger fallback
                 return;
             }
             shouldRestartRef.current = false;
@@ -141,7 +140,6 @@ export function useSpeechRecognition({
         };
 
         recognition.onend = () => {
-            // Auto-restart if we should still be listening
             if (shouldRestartRef.current) {
                 try {
                     setTimeout(() => {
