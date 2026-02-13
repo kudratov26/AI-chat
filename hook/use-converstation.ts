@@ -46,9 +46,9 @@ interface KeywordMap {
 
 const KEYWORD_MAPPINGS: KeywordMap[] = [
     { keywords: ["weather", "today", "forecast", "temperature"], video: "weather" },
-    { keywords: ["goodbye", "bye", "see you", "quit", "exit", "end"], video: "goodbye" },
-    { keywords: ["hello", "hi", "hey", "greetings"], video: "general_response" },
-    // { keywords: ["secret", "magic", "code", "hidden"], video: "easter_egg" },
+    { keywords: ["goodbye", "bye", "quit", "exit", "end"], video: "goodbye" },
+    { keywords: ["hello", "hi", "good", "i am doing good", "how are you", "hey", "greetings"], video: "general_response" },
+    { keywords: ["secret", "magic", "code", "hidden"], video: "easter_egg" },
 ];
 
 const AI_RESPONSES: Partial<Record<VideoKey, string>> = {
@@ -63,20 +63,15 @@ const AI_RESPONSES: Partial<Record<VideoKey, string>> = {
 function matchKeyword(transcript: string[]): VideoKey {
     const keywords = transcript.map((word) => word.toLowerCase().trim());
 
-    // Debug logging
-    console.log('Matching keywords:', keywords);
-
     for (const keyword of keywords) {
         for (const mapping of KEYWORD_MAPPINGS) {
             if (mapping.keywords.includes(keyword)) {
-                console.log('Matched:', keyword, '->', mapping.video);
                 return mapping.video;
             }
         }
     }
 
-    console.log('No match found, using general_response');
-    return "general_response";
+    return "fallback";
 }
 
 export function useConversation() {
@@ -87,6 +82,7 @@ export function useConversation() {
         Array<{ text: string; type: "user" | "system" }>
     >([]);
     const [error, setError] = useState<string | null>(null)
+    const [silenceCount, setSilenceCount] = useState(0)
 
     const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -126,6 +122,9 @@ export function useConversation() {
         const words = transcript.toLowerCase().split(' ')
         const matchedVideo = matchKeyword(words)
 
+        // Reset silence count on successful speech
+        setSilenceCount(0)
+
         // Add to transcript history
         setTranscriptHistory(prev => [...prev, { text: transcript, type: "user" }])
         playVideo(matchedVideo)
@@ -142,13 +141,15 @@ export function useConversation() {
         clearSilenceTimer()
         silenceTimeoutRef.current = setTimeout(() => {
             if (state === 'listening') {
-                playVideo('prompt')
-                setTimeout(() => {
-                    playVideo('listening')
-                }, 10000)
+                if (silenceCount === 0) {
+                    setSilenceCount(1)
+                    playVideo('prompt')
+                } else {
+                    playVideo('goodbye')
+                }
             }
         }, duration)
-    }, [state, clearSilenceTimer, playVideo])
+    }, [state, clearSilenceTimer, playVideo, silenceCount])
 
     const startChat = useCallback(() => {
         playVideo('greeting')
@@ -164,6 +165,7 @@ export function useConversation() {
         setCurrentSource(VIDEO_SOURCES['idle'][0])
         setTranscriptHistory([])
         setError(null)
+        setSilenceCount(0)
         clearSilenceTimer()
     }, [clearSilenceTimer])
 

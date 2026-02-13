@@ -12,6 +12,7 @@ import { useMediaRecorder } from '@/hook/use-media-recorder';
 import { useSpeechRecognition } from '@/hook/use-speech-recognition';
 import { LOOPING_VIDEOS } from '@/constants/videos';
 import { resumeContext } from '@/lib/audio-context';
+import { motion, AnimatePresence } from 'framer-motion'
 
 export const Chat = () => {
     // States
@@ -81,8 +82,13 @@ export const Chat = () => {
     const isAIActive = ['greeting', 'responding', 'fallback', 'prompt', 'goodbye'].includes(state || '');
 
     return (
-        <div className='max-w-4xl mx-auto space-y-4'>
-            <div className='relative'>
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className='max-w-4xl mx-auto space-y-4'
+        >
+            <div className='relative overflow-hidden rounded-2xl border border-border bg-black/5 dark:bg-black/20'>
                 <div className='flex justify-center'>
                     <VideoPlayer
                         currentVideo={currentVideo}
@@ -93,11 +99,19 @@ export const Chat = () => {
                     />
                 </div>
                 <div className='absolute top-4 left-4 z-10'>
-                    {state && state !== 'idle' && (
-                        <div className="text-[10px] text-white/40 font-mono uppercase tracking-[0.2em] bg-black/10 backdrop-blur-[2px] px-2 py-0.5 rounded-sm">
-                            {state}
-                        </div>
-                    )}
+                    <AnimatePresence mode="wait">
+                        {state && state !== 'idle' && (
+                            <motion.div
+                                key={state}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 10 }}
+                                className="text-[10px] text-white/50 font-mono uppercase tracking-[0.2em] bg-black/20 backdrop-blur-md px-2 py-0.5 rounded-sm border border-white/10"
+                            >
+                                {state}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
                 <div className="absolute bottom-6 left-0 right-0 z-20 pointer-events-none">
                     <AudioVisualizer
@@ -106,26 +120,46 @@ export const Chat = () => {
                     />
                 </div>
             </div>
-            {error && (
-                <div className="text-red-500/80 text-[11px] font-mono text-center animate-in fade-in slide-in-from-top-1">
-                    [ERROR: {error.toUpperCase()}]
-                </div>
-            )}
-            <div className="px-4 py-2">
+
+            <AnimatePresence>
+                {error && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="text-red-500/80 text-[11px] font-mono text-center overflow-hidden"
+                    >
+                        [ERROR: {error.toUpperCase()}]
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="px-4 py-2"
+            >
                 <Transcript
                     transcriptHistory={transcriptHistory}
                     interimTranscript={interimTranscript}
                 />
-            </div>
+            </motion.div>
 
             {/* Control Buttons */}
-            <div className="flex justify-center space-x-8 pt-2">
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="flex justify-center space-x-8 pt-2"
+            >
                 {state === 'idle' ? (
                     <button
-                        className="text-muted-foreground hover:text-foreground text-xs font-mono uppercase tracking-widest transition-colors duration-300 disabled:opacity-30"
+                        className="text-muted-foreground hover:text-foreground text-xs font-mono uppercase tracking-widest transition-colors duration-300 disabled:opacity-30 flex items-center gap-2 group"
                         onClick={handleStartChat}
                         disabled={!isSupported}
                     >
+                        <span className="opacity-0 group-hover:opacity-100 transition-opacity">»</span>
                         [ Start ]
                     </button>
                 ) : (
@@ -146,7 +180,7 @@ export const Chat = () => {
                         </button>
                     </>
                 )}
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     )
 }

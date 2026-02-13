@@ -17,9 +17,6 @@ export function useMediaRecorder() {
                 const recorder = new MediaRecorder(audioStream);
                 setMediaRecorder(recorder);
 
-                // We don't necessarily need to start the recorder for the canvas visualizer
-                // if we use the stream directly with an AnalyserNode.
-                // But we'll keep it for compatibility if needed elsewhere.
                 recorder.start(10);
             } catch (err) {
                 console.error("Error accessing microphone:", err);
