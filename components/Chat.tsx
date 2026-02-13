@@ -1,11 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { VideoPlayer } from './VideoPlayer'
-import { ThemeToggle } from './ThemeToggle'
 import { useConversation } from '@/hook/use-converstation'
-import { Button } from './Button'
-import { Status } from './Status'
 import { Transcript } from './Transcript'
 import { AudioVisualizer } from './AudioVisualizer'
 import { useMediaRecorder } from '@/hook/use-media-recorder';
